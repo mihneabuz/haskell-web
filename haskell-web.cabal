@@ -30,6 +30,7 @@ library
       Routes
       Types
       User
+      Utils
   other-modules:
       Paths_haskell_web
   hs-source-dirs:
