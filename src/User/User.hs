@@ -4,14 +4,12 @@ module User.User
 where
 
 import Control.Monad.IO.Class
-import Data.Aeson (decode, FromJSON)
+import Data.Aeson (decode)
 import Data.Int (Int64)
-import Data.Text (Text)
 import Database.PostgreSQL.Simple
 import Postgres (withConn)
-import GHC.Generics
 import Types (Config, db)
-import User.Types (User(..))
+import User.Types
 import Utils
 import Web.Scotty
 
@@ -32,16 +30,10 @@ readUser config = get "/user/:id" $ do
   user <- getUserById config userId
   json user
 
--- TODO: fix this
-data CreateUserPayload = CreateUserPayload Text deriving (Generic)
-
-instance FromJSON CreateUserPayload
-
 createUser :: Config -> ScottyM ()
 createUser config = post "/user" $ do
-  maybePayload <- (decode <$> body) :: ActionM (Maybe CreateUserPayload)
-
-  case maybePayload of
+  payload <- decode <$> body
+  case payload of
     Nothing -> text "bad request"
     Just (CreateUserPayload n) -> do
       res <- insertUser config (User 5 n)

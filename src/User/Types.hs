@@ -1,5 +1,6 @@
 module User.Types
   ( User (..),
+    CreateUserPayload (..)
   )
 where
 
@@ -17,3 +18,7 @@ instance FromJSON User
 instance FromRow User
 
 instance ToRow User
+
+data CreateUserPayload = CreateUserPayload {name :: Text} deriving (Generic)
+
+instance FromJSON CreateUserPayload
