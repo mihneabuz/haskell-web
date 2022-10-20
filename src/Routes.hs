@@ -3,7 +3,7 @@ module Routes
   )
 where
 
-import User (userRouter)
+import User.User (userRouter)
 import Web.Scotty
 import Types (Config)
 

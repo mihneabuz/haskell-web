@@ -29,7 +29,8 @@ library
       Postgres
       Routes
       Types
-      User
+      User.Types
+      User.User
       Utils
   other-modules:
       Paths_haskell_web
