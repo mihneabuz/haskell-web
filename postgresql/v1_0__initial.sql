@@ -1,4 +1,6 @@
 create table users (
   id bigserial primary key not null,
-  name text not null unique
+  username text not null unique,
+  mail text not null,
+  password text not null
 );
