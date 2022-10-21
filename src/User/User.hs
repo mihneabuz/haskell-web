@@ -6,8 +6,9 @@ where
 import Control.Monad.IO.Class
 import Data.Aeson (decode)
 import Data.Int (Int64)
+import Data.Text (Text)
 import Database.PostgreSQL.Simple
-import Postgres (withConn)
+import Postgres (withConn, withConnUnchecked)
 import Types (Config, db)
 import User.Types
 import Utils
@@ -34,10 +35,13 @@ createUser :: Config -> ScottyM ()
 createUser config = post "/user" $ do
   payload <- decode <$> body
   case payload of
-    Nothing -> text "bad request"
+    Nothing -> json $ resBad "bad request"
     Just (CreateUserPayload n) -> do
-      res <- insertUser config (User 5 n)
-      json res
+      res <- insertUser config (User 0 n)
+      json $ case res of
+        Right True -> resGood
+        Left err -> resBad err
+        _ -> resBad "unknown error"
 
 {--                 Querying Database                    --}
 
@@ -53,13 +57,14 @@ getAllUsers config = userQuery config qry arg
     qry = "Select id,name from users"
     arg = ()
 
-insertUser :: MonadIO m => Config -> User -> m Int64
-insertUser config = userMutation config qry
+insertUser :: MonadIO m => Config -> User -> m (Either Text Bool)
+insertUser config (User _ n) = fmap (> 0) <$> userMutation config qry arg
   where
-    qry = "insert into users values (?, ?)"
+    qry = "insert into users (name) values (?)"
+    arg = Only n
 
 userQuery :: (MonadIO m, ToRow a) => Config -> Query -> a -> m [User]
-userQuery config qry arg = withConn (db config) $ \con -> query con qry arg
+userQuery config qry arg = withConnUnchecked (db config) $ \con -> query con qry arg
 
-userMutation :: (MonadIO m, ToRow a) => Config -> Query -> a -> m Int64
+userMutation :: (MonadIO m, ToRow a) => Config -> Query -> a -> m (Either Text Int64)
 userMutation config qry arg = withConn (db config) $ \con -> execute con qry arg
